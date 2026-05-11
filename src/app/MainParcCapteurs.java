@@ -4,6 +4,7 @@ import benchmark.BenchmarkResult;
 import benchmark.BenchmarkRunner;
 import benchmark.BenchmarkScenario;
 
+import java.awt.GraphicsEnvironment;
 import java.util.List;
 
 /**
@@ -63,8 +64,12 @@ public class MainParcCapteurs {
         
         
         
-     // Affichage graphique Swing
-        javax.swing.SwingUtilities.invokeLater(() -> new ui.BenchmarkUI(results));
+        // Affichage graphique Swing si un environnement graphique est disponible.
+        if (!GraphicsEnvironment.isHeadless()) {
+            javax.swing.SwingUtilities.invokeLater(() -> new ui.BenchmarkUI(results));
+        } else {
+            System.out.println("Mode headless detecte : interface Swing non lancee.");
+        }
     }
 
     // ── Helpers d'export ─────────────────────────────────────────────────────

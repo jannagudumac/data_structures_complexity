@@ -1,0 +1,13 @@
+.ipython/
+.jupyter/
+.settings/
+.venv-notebook/
+.codex/
+.agents/
+bin/
+
+# Eclipse project metadata
+.classpath
+.project
+
+
