@@ -1,6 +1,17 @@
 # Rapport expérimental — ParcCapteurs
 
-## 1. Sujet
+## 1. Auteurs et répartition du travail
+
+- Janna Gudumac
+- Paul Maurin
+
+Répartition du travail :
+
+- Paul Maurin : travail principal sur le code Java
+- Janna Gudumac : travail principal sur le notebook Python et l'intégration des graphiques
+- Rédaction du rapport : travail réalisé ensemble
+
+## 2. Sujet
 
 Ce projet étudie le choix d'une structure de données pour un conteneur `ParcCapteurs` manipulant des objets `Capteur`.
 
@@ -19,7 +30,7 @@ Les opérations demandées par le sujet sont :
 
 L'objectif est de déterminer dans quels contextes chaque structure est la plus adaptée, à partir de mesures réelles de temps d'exécution et d'occupation mémoire.
 
-## 2. Modèle métier et hypothèses
+## 3. Modèle métier et hypothèses
 
 Chaque capteur possède un identifiant unique généré automatiquement, ainsi qu'un type (`TypeCapteur`). Les données sont générées automatiquement par `CapteurGenerator`, avec une graine fixe afin de rendre les expériences reproductibles.
 
@@ -30,7 +41,7 @@ Hypothèses retenues :
 - les mesures sont faites sur des jeux de données identiques pour les deux implémentations
 - l'ordre de parcours n'est pas un critère d'évaluation ici
 
-## 3. Structures comparées et complexités théoriques
+## 4. Structures comparées et complexités théoriques
 
 ### `LinkedList<Capteur>`
 
@@ -53,7 +64,7 @@ Conséquence attendue :
 - `HashMap` doit dominer dès que les recherches et suppressions par identifiant sont fréquentes
 - les écarts doivent se réduire lorsque le temps total est surtout porté par `findAll` et `countByType`, car ces deux opérations restent linéaires dans les deux structures
 
-## 4. Protocole expérimental
+## 5. Protocole expérimental
 
 Les mesures ont été produites le 11 mai 2026 à partir de l'exécution réelle du programme Java et du notebook `graphs/graphs.ipynb`.
 
@@ -89,7 +100,7 @@ Le notebook exécuté a généré les figures suivantes :
 - `graphs/g7_repartition_operations.png`
 - `graphs/g8_loglog.png`
 
-## 5. Résultats principaux
+## 6. Résultats principaux
 
 ### 5.1 Bilan global
 
@@ -137,7 +148,7 @@ Le cas le plus favorable à `HashMap` observé dans ces mesures est `S2-LectureI
 
 Soit un rapport d'environ `2.18x` en faveur de `HashMap`.
 
-## 6. Interprétation
+## 7. Interprétation
 
 ### 6.1 Lecture intensive
 
@@ -186,7 +197,7 @@ Le temps de comptage croît fortement dans les deux cas entre `n=100` et `n=1000
 
 La domination du comptage masque donc l'avantage de `HashMap` sur les accès par identifiant. On observe alors des résultats proches, parfois légèrement en faveur de `LinkedList`.
 
-## 7. Occupation mémoire
+## 8. Occupation mémoire
 
 Les mesures mémoire suggèrent bien que `HashMap` consomme davantage que `LinkedList`, ce qui est cohérent avec la présence d'une table de hachage et de structures internes supplémentaires.
 
@@ -206,7 +217,7 @@ Conclusion mémoire :
 - qualitativement, `HashMap` semble plus gourmand
 - quantitativement, le protocole actuel n'est pas assez robuste pour classer précisément les deux structures sur ce critère
 
-## 8. Limites de l'expérience
+## 9. Limites de l'expérience
 
 Les résultats sont réels et reproductibles, mais plusieurs limites doivent être signalées :
 
@@ -216,7 +227,7 @@ Les résultats sont réels et reproductibles, mais plusieurs limites doivent êt
 - la mesure mémoire doit être améliorée
 - certaines inversions faibles entre structures à petite taille relèvent probablement davantage des constantes et du bruit expérimental que d'un changement de complexité
 
-## 9. Conclusion
+## 10. Conclusion
 
 Les mesures réelles confirment l'analyse théorique.
 
@@ -236,7 +247,7 @@ Conclusion pratique :
 - si le travail consiste surtout à parcourir tous les capteurs ou à compter par type, les deux structures deviennent proches, sans avantage décisif pour `LinkedList`
 - pour un usage réel de type inventaire applicatif, `HashMap` est le choix recommandé
 
-## 10. Note sur l'usage des LLM
+## 11. Note sur l'usage des LLM
 
 Un LLM a été utilisé entre le 10 et le 11 mai 2026 pour :
 
@@ -255,7 +266,7 @@ Les formulations de l'annexe ne sont donc pas des citations mot à mot. Elles co
 
 Une annexe séparée a été ajoutée dans `Annexe_LLM.md`.
 
-## 11. Estimation de l'empreinte carbone du recours au LLM
+## 12. Estimation de l'empreinte carbone du recours au LLM
 
 Cette estimation reste indicative, car nous ne disposons pas des mesures internes exactes du modèle utilisé ici.
 
@@ -277,7 +288,7 @@ Le point important à retenir est surtout méthodologique :
 - l'impact dépend fortement de la taille du modèle
 - il dépend aussi du matériel, du batching, de la quantification et de l'infrastructure d'exécution
 
-## 12. Références
+## 13. Références
 
 ### Références du projet
 

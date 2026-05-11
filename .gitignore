@@ -6,7 +6,6 @@
 .agents/
 bin/
 
-# Eclipse project metadata
 .classpath
 .project
 
