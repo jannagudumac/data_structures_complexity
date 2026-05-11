@@ -1,0 +1,146 @@
+package benchmark;
+
+import container.ParcCapteurs;
+import container.ParcCapteursHashMap;
+import container.ParcCapteursLinkedList;
+import generator.CapteurGenerator;
+import model.Capteur;
+import model.CapteurException;
+import model.IDGenerator;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+/**
+ * Moteur de benchmark.
+ *
+ * Pour chaque combinaison (scénario x taille x structure), on mesure
+ * séparément le temps de chaque type d'opération et la mémoire consommée.
+ *
+ * Protocole :
+ *  - Les opérations sont proportionnelles aux pourcentages du scénario.
+ *  - Le jeu de données initial est généré avec une graine fixe (reproductible).
+ *  - IDGenerator est remis à zéro avant chaque répétition pour que les IDs
+ *    correspondent toujours au parc courant.
+ *  - Le parc est vidé puis rechargé entre chaque répétition.
+ *  - La mémoire est mesurée avant/après l'ensemble des répétitions, après GC.
+ */
+public class BenchmarkRunner {
+
+    private static final int NB_OPS      = 1000;
+    private static final int REPETITIONS = 7;
+
+    private final CapteurGenerator generator = new CapteurGenerator();
+
+    /** Lance tous les scenários sur toutes les tailles pour les deux structures. */
+    public List<BenchmarkResult> runAll(BenchmarkScenario[] scenarios, int[] tailles) {
+        List<BenchmarkResult> results = new ArrayList<>();
+        for (BenchmarkScenario sc : scenarios) {
+            System.out.println("\n=== Scénario : " + sc + " ===");
+            for (int taille : tailles) {
+                System.out.print("  n=" + taille + " ... ");
+                results.add(measure("LinkedList", new ParcCapteursLinkedList(), sc, taille));
+                results.add(measure("HashMap",    new ParcCapteursHashMap(),    sc, taille));
+                System.out.println("OK");
+            }
+        }
+        return results;
+    }
+
+    private BenchmarkResult measure(String name, ParcCapteurs parc,
+                                    BenchmarkScenario sc, int taille) {
+
+        int nbAjout      = NB_OPS * sc.ajoutPct()      / 100;
+        int nbRetrait    = NB_OPS * sc.retraitPct()    / 100;
+        int nbRecherche  = NB_OPS * sc.recherchePct()  / 100;
+        int nbInventaire = NB_OPS * sc.inventairePct() / 100;
+        int nbComptage   = NB_OPS - nbAjout - nbRetrait - nbRecherche - nbInventaire;
+
+        long totalAjout = 0, totalRecherche = 0, totalSuppression = 0,
+             totalInventaire = 0, totalComptage = 0;
+
+        System.gc();
+        long memAvant = usedMemory();
+
+        for (int rep = 0; rep < REPETITIONS; rep++) {
+            IDGenerator.reset();
+            List<Capteur> base = generator.generer(taille, 1234L);
+
+            viderParc(parc, base);
+            IDGenerator.reset();
+            base = generator.generer(taille, 1234L);
+            try {
+                for (Capteur c : base)
+                    parc.addCapteur(c);  // insertion directe, pas de new Capteur
+            } catch (CapteurException e) {
+                throw new RuntimeException("Erreur remplissage : " + e.getMessage(), e);
+            }
+
+            Random rng = new Random(5678L + rep);
+
+            // AJOUT
+            long t0 = System.nanoTime();
+            for (int i = 0; i < nbAjout; i++) {
+                try { parc.addCapteur(generator.genererCapteur(rng)); }
+                catch (CapteurException ignored) { }
+            }
+            totalAjout += System.nanoTime() - t0;
+
+            // RECHERCHE
+            t0 = System.nanoTime();
+            for (int i = 0; i < nbRecherche; i++) {
+                int id = base.get(rng.nextInt(base.size())).getId();
+                try { parc.findById(id); }
+                catch (CapteurException ignored) { }
+            }
+            totalRecherche += System.nanoTime() - t0;
+
+            // SUPPRESSION
+            t0 = System.nanoTime();
+            for (int i = 0; i < nbRetrait; i++) {
+                int id = base.get(rng.nextInt(base.size())).getId();
+                try { parc.removeById(id); }
+                catch (CapteurException ignored) { }
+            }
+            totalSuppression += System.nanoTime() - t0;
+
+            // INVENTAIRE
+            t0 = System.nanoTime();
+            for (int i = 0; i < nbInventaire; i++) parc.findAll();
+            totalInventaire += System.nanoTime() - t0;
+
+            // COMPTAGE
+            t0 = System.nanoTime();
+            for (int i = 0; i < nbComptage; i++) parc.countByType();
+            totalComptage += System.nanoTime() - t0;
+        }
+
+        System.gc();
+        long memApres = usedMemory();
+        double memKo  = Math.max(0, memApres - memAvant) / 1024.0;
+
+        int r = Math.max(1, REPETITIONS);
+        return new BenchmarkResult(
+                name, sc.nom(), taille,
+                totalAjout       / r,
+                totalRecherche   / r,
+                totalSuppression / r,
+                totalInventaire  / r,
+                totalComptage    / r,
+                memKo
+        );
+    }
+
+    private void viderParc(ParcCapteurs parc, List<Capteur> base) {
+        for (Capteur c : base) {
+            try { parc.removeById(c.getId()); }
+            catch (CapteurException ignored) { }
+        }
+    }
+
+    private long usedMemory() {
+        Runtime rt = Runtime.getRuntime();
+        return rt.totalMemory() - rt.freeMemory();
+    }
+}
