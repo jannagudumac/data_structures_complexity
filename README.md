@@ -11,11 +11,6 @@ javac -d bin -sourcepath src $(find src -name "*.java")
 java -cp bin app.MainParcCapteurs
 ```
 
-## Bugs corrigés
-1. `MainParcCapteurs.java` : `"1  0"` → `10`
-2. `IDGenerator.java` : ajout de `reset()` appelé avant chaque répétition
-3. `BenchmarkRunner.java` : parc vidé et rechargé entre chaque répétition
-
 ## Scénarios
 | Scénario | Ajout | Retrait | Recherche | Inventaire | Comptage |
 |----------|-------|---------|-----------|------------|----------|
