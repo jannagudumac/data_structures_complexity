@@ -64,9 +64,14 @@ public class MainParcCapteurs {
         
         
         
-        // Affichage graphique Swing si un environnement graphique est disponible.
-        if (!GraphicsEnvironment.isHeadless()) {
-            javax.swing.SwingUtilities.invokeLater(() -> new ui.BenchmarkUI(results));
+        // Affichage graphique Swing si un environnement graphique est
+        // effectivement exploitable (DISPLAY present et non vide).
+        if (canLaunchUi()) {
+            try {
+                javax.swing.SwingUtilities.invokeLater(() -> new ui.BenchmarkUI(results));
+            } catch (Throwable t) {
+                System.out.println("Interface Swing non lancee : " + t.getMessage());
+            }
         } else {
             System.out.println("Mode headless detecte : interface Swing non lancee.");
         }
@@ -125,5 +130,10 @@ public class MainParcCapteurs {
         } catch (java.io.IOException e) {
             System.err.println("Erreur ecriture fichier : " + e.getMessage());
         }
+    }
+
+    private static boolean canLaunchUi() {
+        String display = System.getenv("DISPLAY");
+        return !GraphicsEnvironment.isHeadless() && display != null && !display.isBlank();
     }
 }

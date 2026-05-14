@@ -1,6 +1,7 @@
 .ipython/
 .jupyter/
 .settings/
+.venv/
 .venv-notebook/
 .codex/
 .agents/

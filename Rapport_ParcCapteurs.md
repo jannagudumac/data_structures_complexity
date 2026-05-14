@@ -66,7 +66,12 @@ Conséquence attendue :
 
 ## 5. Protocole expérimental
 
-Les mesures ont été produites le 11 mai 2026 à partir de l'exécution réelle du programme Java et du notebook `graphs/graphs.ipynb`.
+Les mesures présentées dans cette version ont été régénérées le 14 mai 2026 à partir de l'exécution réelle du programme Java et du notebook `graphs/graphs.ipynb`.
+
+Cette régénération suit la correction de deux défauts du pipeline :
+
+- le chemin de mesure mémoire a été séparé du benchmark temporel, afin d'éviter les valeurs nulles instables et de rendre `g5_memoire.png` cohérent
+- le lancement Swing a été sécurisé en contexte headless ou avec un `DISPLAY` invalide, ce qui permet au benchmark d'exporter proprement ses résultats même sans interface utilisable
 
 Paramètres du benchmark :
 
@@ -89,6 +94,13 @@ Les temps sont mesurés séparément pour chaque famille d'opérations, puis agr
 - `results/results.csv`
 - `results/results.json`
 
+La mémoire est désormais mesurée sur un chemin dédié :
+
+- pour chaque couple `(structure, taille)`, on peuple la structure avec le même jeu de capteurs
+- on ignore une première sonde pour absorber le bruit de démarrage de la JVM
+- on conserve ensuite la médiane de trois mesures après `GC`
+- la valeur obtenue est réutilisée pour tous les scénarios de cette structure et de cette taille
+
 Le notebook exécuté a généré les figures suivantes :
 
 - `graphs/g1_total_par_scenario.png`
@@ -102,12 +114,12 @@ Le notebook exécuté a généré les figures suivantes :
 
 ## 6. Résultats principaux
 
-### 5.1 Bilan global
+### 6.1 Bilan global
 
 Sur les 30 couples `(scénario, taille)` :
 
-- `HashMap` gagne 20 fois
-- `LinkedList` gagne 10 fois
+- `HashMap` gagne 24 fois
+- `LinkedList` gagne 6 fois
 
 Répartition par scénario :
 
@@ -115,107 +127,112 @@ Répartition par scénario :
 |---|---:|---:|
 | `S1-Equilibre` | 2 | 4 |
 | `S2-LectureIntensive` | 1 | 5 |
-| `S3-EcritureIntensive` | 1 | 5 |
+| `S3-EcritureIntensive` | 0 | 6 |
 | `S4-InventaireIntensif` | 1 | 5 |
-| `S5-ComptageIntensif` | 5 | 1 |
+| `S5-ComptageIntensif` | 2 | 4 |
 
-### 5.2 Temps totaux moyens par scénario
+### 6.2 Temps totaux moyens par scénario
 
 | Scénario | `LinkedList` moyen (ms) | `HashMap` moyen (ms) | Conclusion |
 |---|---:|---:|---|
-| `S1-Equilibre` | 8.389 | 7.497 | avantage `HashMap` |
-| `S2-LectureIntensive` | 5.472 | 3.073 | avantage net `HashMap` |
-| `S3-EcritureIntensive` | 5.053 | 3.223 | avantage net `HashMap` |
-| `S4-InventaireIntensif` | 8.639 | 7.763 | léger avantage `HashMap` |
-| `S5-ComptageIntensif` | 14.234 | 14.006 | quasi-égalité |
+| `S1-Equilibre` | 13.969 | 13.835 | quasi-égalité, léger avantage `HashMap` |
+| `S2-LectureIntensive` | 8.121 | 4.422 | avantage net `HashMap` |
+| `S3-EcritureIntensive` | 5.239 | 3.180 | avantage net `HashMap` |
+| `S4-InventaireIntensif` | 14.035 | 10.381 | avantage `HashMap` |
+| `S5-ComptageIntensif` | 23.018 | 20.317 | avantage `HashMap` |
 
-### 5.3 Exemples représentatifs
+### 6.3 Exemples représentatifs
 
 À grande taille (`n = 10000`) :
 
 | Scénario | `LinkedList` (ms) | `HashMap` (ms) | Gagnant |
 |---|---:|---:|---|
-| `S1-Equilibre` | 24.001 | 24.309 | `LinkedList` de très peu |
-| `S2-LectureIntensive` | 17.316 | 9.423 | `HashMap` |
-| `S3-EcritureIntensive` | 14.674 | 8.272 | `HashMap` |
-| `S4-InventaireIntensif` | 29.162 | 26.403 | `HashMap` |
-| `S5-ComptageIntensif` | 43.387 | 44.318 | `LinkedList` de très peu |
+| `S1-Equilibre` | 34.438 | 43.087 | `LinkedList` |
+| `S2-LectureIntensive` | 22.828 | 10.468 | `HashMap` |
+| `S3-EcritureIntensive` | 15.270 | 8.593 | `HashMap` |
+| `S4-InventaireIntensif` | 44.670 | 32.246 | `HashMap` |
+| `S5-ComptageIntensif` | 60.601 | 48.273 | `HashMap` |
 
-Le cas le plus favorable à `HashMap` observé dans ces mesures est `S2-LectureIntensive`, `n = 5000` :
+Le cas le plus favorable à `HashMap` observé dans cette campagne est `S2-LectureIntensive`, `n = 10000` :
 
-- `LinkedList` : `9.884 ms`
-- `HashMap` : `4.531 ms`
+- `LinkedList` : `22.828 ms`
+- `HashMap` : `10.468 ms`
 
 Soit un rapport d'environ `2.18x` en faveur de `HashMap`.
 
 ## 7. Interprétation
 
-### 6.1 Lecture intensive
+### 7.1 Lecture intensive
 
 Les résultats confirment très clairement la théorie.
 
 Dans `S2-LectureIntensive`, la recherche passe de :
 
-- `0.148 ms` à `4.557 ms` pour `LinkedList` entre `n=100` et `n=10000`
-- `0.091 ms` à `0.092 ms` pour `HashMap`
+- `0.156 ms` à `6.130 ms` pour `LinkedList` entre `n=100` et `n=10000`
+- `0.021 ms` à `0.076 ms` pour `HashMap`
 
-La croissance de `LinkedList` est d'environ `30.8x`, alors que `HashMap` reste pratiquement constant. C'est exactement ce qu'on attend d'une recherche linéaire contre une recherche en temps moyen constant.
+La croissance de `LinkedList` est très forte, alors que `HashMap` reste dans un ordre de grandeur faible. C'est bien ce qu'on attend d'une recherche linéaire contre une recherche en temps moyen constant.
 
-### 6.2 Ecriture intensive
+### 7.2 Ecriture intensive
 
 Même avec beaucoup d'ajouts, `HashMap` reste le meilleur choix, car le scénario contient aussi beaucoup de suppressions par identifiant.
 
 Dans `S3-EcritureIntensive`, la suppression passe de :
 
-- `0.394 ms` à `2.867 ms` pour `LinkedList`
-- `0.172 ms` à `0.016 ms` pour `HashMap`
+- `0.332 ms` à `2.504 ms` pour `LinkedList`
+- `0.195 ms` à `0.022 ms` pour `HashMap`
 
-Le coût du retrait par identifiant pénalise fortement `LinkedList`, puisque toute la liste doit être parcourue. Les rares victoires de `LinkedList` à petite taille s'expliquent surtout par des effets de constantes et par le fait que les structures restent petites.
+Le coût du retrait par identifiant pénalise fortement `LinkedList`, puisque toute la liste doit être parcourue. Dans cette campagne, `HashMap` gagne les 6 tailles du scénario `S3`.
 
-### 6.3 Inventaire intensif
+### 7.3 Inventaire intensif
 
-Dans `S4-InventaireIntensif`, les écarts sont beaucoup plus faibles. C'est logique :
+Dans `S4-InventaireIntensif`, les deux structures restent dominées par les parcours complets. C'est logique :
 
 - `findAll()` est `O(n)` pour les deux structures
 - `countByType()` est aussi `O(n)` pour les deux structures
 
 À `n=5000`, on obtient :
 
-- `LinkedList` : `11.715 ms`
-- `HashMap` : `11.463 ms`
+- `LinkedList` : `25.960 ms`
+- `HashMap` : `19.848 ms`
 
-L'écart est faible, ce qui montre que lorsque le parcours complet domine, le bénéfice de `HashMap` sur les recherches ponctuelles pèse moins dans le total.
+L'écart est moins spectaculaire que dans les scénarios dominés par la recherche ponctuelle, mais il reste réel. Le parcours complet masque une partie de l'avantage de `HashMap`, sans l'annuler.
 
-### 6.4 Comptage intensif
+### 7.4 Comptage intensif
 
-`S5-ComptageIntensif` est le scénario où `LinkedList` résiste le mieux. Cela ne signifie pas que `LinkedList` devient théoriquement meilleure, mais plutôt que les deux structures sont contraintes de tout parcourir.
+`S5-ComptageIntensif` reste le scénario le plus proche, car les deux structures doivent parcourir l'ensemble des capteurs pour compter par type.
 
 Le temps de comptage croît fortement dans les deux cas entre `n=100` et `n=10000` :
 
-- `LinkedList` : `0.470 ms` → `40.746 ms`
-- `HashMap` : `0.587 ms` → `42.767 ms`
+- `LinkedList` : `1.119 ms` → `57.093 ms`
+- `HashMap` : `1.369 ms` → `46.650 ms`
 
-La domination du comptage masque donc l'avantage de `HashMap` sur les accès par identifiant. On observe alors des résultats proches, parfois légèrement en faveur de `LinkedList`.
+La domination du comptage masque donc en partie l'avantage de `HashMap` sur les accès par identifiant. On observe encore quelques inversions à très petite taille, mais `HashMap` reprend l'avantage dès `n = 1000` dans cette campagne.
 
 ## 8. Occupation mémoire
 
-Les mesures mémoire suggèrent bien que `HashMap` consomme davantage que `LinkedList`, ce qui est cohérent avec la présence d'une table de hachage et de structures internes supplémentaires.
+Après correction du chemin de mesure mémoire, les valeurs sont désormais cohérentes pour un même couple `(structure, taille)` quel que soit le scénario.
+
+Les résultats confirment que `HashMap` consomme davantage que `LinkedList`, ce qui est cohérent avec la présence d'une table de hachage et de structures internes supplémentaires.
 
 Exemples mesurés :
 
-- `S1-Equilibre`, `n=1000` : `63.63 Ko` pour `LinkedList` contre `93.94 Ko` pour `HashMap`
-- `S2-LectureIntensive`, `n=10000` : `921.45 Ko` pour `HashMap`
+- `n=1000` : `23.48 Ko` pour `LinkedList` contre `52.97 Ko` pour `HashMap`
+- `n=5000` : `117.23 Ko` pour `LinkedList` contre `264.47 Ko` pour `HashMap`
+- `n=10000` : `234.42 Ko` pour `LinkedList` contre `530.84 Ko` pour `HashMap`
 
-Cependant, cette partie des résultats doit être interprétée avec prudence :
+Le ratio observé est assez stable, autour de `2.2x` à `2.3x` en faveur de `LinkedList` sur ce critère mémoire.
 
-- 43 mesures mémoire sur 60 valent `0`
-- la mesure actuelle repose sur un `GC` avant/après, ce qui reste très sensible au comportement de la JVM
-- l'expérience mémoire est donc indicative, mais pas suffisamment stable pour une conclusion quantitative fine
+Cependant, cette partie des résultats doit encore être interprétée avec prudence :
+
+- la mesure repose toujours sur un différentiel mémoire de processus Java, pas sur un outil spécialisé de type JOL
+- le `GC`, le JIT et l'état global de la JVM peuvent encore introduire du bruit
+- il s'agit donc d'une estimation plus robuste qu'avant, mais encore approximative
 
 Conclusion mémoire :
 
-- qualitativement, `HashMap` semble plus gourmand
-- quantitativement, le protocole actuel n'est pas assez robuste pour classer précisément les deux structures sur ce critère
+- qualitativement et quantitativement, `HashMap` apparaît nettement plus gourmand dans cette campagne
+- la tendance est maintenant exploitable dans les graphes, même si une instrumentation plus spécialisée resterait préférable
 
 ## 9. Limites de l'expérience
 
@@ -223,46 +240,51 @@ Les résultats sont réels et reproductibles, mais plusieurs limites doivent êt
 
 - l'outil de mesure n'est pas un micro-benchmark de type JMH
 - la JVM peut introduire du bruit via le JIT, le ramasse-miettes et l'état mémoire global
+- les valeurs temporelles peuvent varier d'une campagne à l'autre, même avec graines fixes
 - les scénarios mélangent les opérations, ce qui est pertinent pour l'usage, mais complique l'isolation parfaite des coûts
-- la mesure mémoire doit être améliorée
+- la mesure mémoire a été améliorée, mais reste une approximation de haut niveau
+- le chemin Swing/headless a été corrigé pour fiabiliser les exports en environnement non graphique
 - certaines inversions faibles entre structures à petite taille relèvent probablement davantage des constantes et du bruit expérimental que d'un changement de complexité
 
 ## 10. Conclusion
 
 Les mesures réelles confirment l'analyse théorique.
 
-`HashMap<Integer, Capteur>` est le meilleur choix général pour `ParcCapteurs`, surtout lorsque l'application effectue beaucoup de recherches et de suppressions par identifiant. C'est le cas le plus fréquent dans un conteneur piloté par identifiants, et les gains deviennent importants dès que la taille du parc augmente.
+`HashMap<Integer, Capteur>` est le meilleur choix général pour `ParcCapteurs`, surtout lorsque l'application effectue beaucoup de recherches et de suppressions par identifiant. Dans cette campagne, il gagne `24` cas sur `30`.
 
 `LinkedList<Capteur>` reste acceptable pour :
 
 - de très petites tailles
-- des scénarios dominés par le parcours complet ou le comptage
+- quelques cas marginaux où les constantes d'exécution favorisent la liste chaînée
 - des situations où l'on cherche avant tout une structure simple et légère
 
-Mais dès que les opérations par identifiant deviennent importantes, `LinkedList` devient rapidement moins adaptée.
+Mais dès que la taille du parc augmente ou que les opérations par identifiant deviennent importantes, `LinkedList` devient rapidement moins adaptée.
 
 Conclusion pratique :
 
 - si l'usage principal est l'accès par identifiant, choisir `HashMap`
-- si le travail consiste surtout à parcourir tous les capteurs ou à compter par type, les deux structures deviennent proches, sans avantage décisif pour `LinkedList`
+- si le travail consiste surtout à parcourir tous les capteurs ou à compter par type, l'écart se réduit parfois, mais `HashMap` reste majoritairement devant dans cette campagne
+- si la mémoire devient un critère fort, `LinkedList` reste plus légère
 - pour un usage réel de type inventaire applicatif, `HashMap` est le choix recommandé
 
 ## 11. Note sur l'usage des LLM
 
-Un LLM a été utilisé entre le 10 et le 11 mai 2026 pour :
+Un LLM a été utilisé entre le 10 et le 14 mai 2026 pour :
 
 - réfléchir à l'architecture Java du projet
 - proposer un protocole de benchmark
 - discuter la génération de données
 - aider à l'interprétation des résultats
+- corriger le chemin de mesure mémoire et le crash Swing/headless
+- resynchroniser les exports, graphiques et documents après correction
 
 Traçabilité minimale conservée :
 
 - modèle utilisé : assistant de type GPT-5 / assistant de code
-- période : `2026-05-10` à `2026-05-11`
+- période : `2026-05-10` à `2026-05-14`
 - conservation : reconstitution fidèle de plusieurs usages réels effectués dans d'autres chats
 
-Les formulations de l'annexe ne sont donc pas des citations mot à mot. Elles correspondent à une synthèse rédigée a posteriori à partir d'échanges réels antérieurs, sans inclure la conversation ayant servi à produire la version finale du rapport.
+Les formulations de l'annexe ne sont donc pas des citations mot à mot. Elles correspondent à une synthèse rédigée a posteriori à partir d'échanges réels, sans en reproduire l'intégralité tour par tour.
 
 Une annexe séparée a été ajoutée dans `Annexe_LLM.md`.
 
@@ -272,13 +294,13 @@ Cette estimation reste indicative, car nous ne disposons pas des mesures interne
 
 Protocole retenu :
 
-1. approximer le volume de texte traité sur l'ensemble des usages reconstitués par un équivalent de `4` pages de `500` mots
+1. approximer le volume de texte traité sur l'ensemble des usages reconstitués par un équivalent de `5` pages de `500` mots
 2. utiliser comme ordre de grandeur la valeur fournie par Ren et al. (2024) pour un LLM "typique" de taille moyenne : environ `15 gCO2e` pour une page de `500` mots
-3. calculer une estimation haute de cet ensemble d'usages : `4 x 15 = 60 gCO2e`
+3. calculer une estimation haute de cet ensemble d'usages : `5 x 15 = 75 gCO2e`
 
 Interprétation :
 
-- estimation indicative haute : environ `60 gCO2e`
+- estimation indicative haute : environ `75 gCO2e`
 - estimation potentiellement bien plus basse si le système a utilisé, pour une partie du travail, des modèles plus petits ou des infrastructures plus efficaces
 
 Cette estimation doit donc être comprise comme un ordre de grandeur, pas comme une mesure physique exacte.

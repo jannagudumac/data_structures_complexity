@@ -4,17 +4,17 @@
 
 Cette annexe documente un historique reconstitué de plusieurs usages réels du LLM au cours du projet `ParcCapteurs`.
 
-Les éléments ci-dessous correspondent à une reconstruction a posteriori d'échanges effectués dans d'autres chats entre le 10 et le 11 mai 2026.
+Les éléments ci-dessous correspondent à une reconstruction a posteriori d'échanges effectués dans d'autres chats entre le 10 et le 14 mai 2026.
 
 Les formulations ne sont pas nécessairement mot à mot, mais elles reflètent fidèlement les usages réels du LLM pendant le projet.
 
-Cette annexe n'inclut pas la conversation ayant servi à produire la version finale du rapport.
+Cette annexe synthétise les usages saillants ; elle n'en reproduit pas nécessairement chaque tour intégralement.
 
 ## Modèle et période
 
 - outil : assistant conversationnel et assistant de code
 - famille de modèle : GPT-5
-- période d'utilisation : `2026-05-10` à `2026-05-11`
+- période d'utilisation : `2026-05-10` à `2026-05-14`
 
 ## Historique reconstitué
 
@@ -58,12 +58,24 @@ Cette annexe n'inclut pas la conversation ayant servi à produire la version fin
   - expliquer pourquoi `LinkedList` reste parfois compétitive
 - résultat : axes d'interprétation réutilisés dans le rapport final
 
+### Session 5 — Correctifs benchmark et documentation
+
+- date : `2026-05-14`
+- objectif : corriger une incohérence signalée entre les graphiques PNG et les résultats de simulation
+- demandes typiques :
+  - vérifier si les PNG correspondaient bien aux exports CSV/JSON
+  - corriger le chemin de mesure mémoire
+  - corriger le crash Swing/headless en environnement graphique invalide
+  - régénérer les exports, les graphiques et les documents
+- résultat : pipeline de benchmark fiabilisé, graphique mémoire cohérent, documentation resynchronisée
+
 ## Exemples de demandes reconstituées
 
 - "propose une architecture Java simple pour comparer LinkedList et HashMap dans un parc de capteurs"
 - "comment générer des capteurs de manière réaliste avec des identifiants uniques et une graine fixe"
 - "quels scénarios de benchmark choisir pour faire ressortir les différences entre recherche, suppression, inventaire et comptage"
 - "aide-moi à interpréter des résultats où HashMap gagne surtout sur la recherche mais moins sur l'inventaire complet"
+- "fix the reports and readme and everything to include the fix, and also include the \"memory-measurement path and the Swing/headless crash\" as the prompt"
 
 ## Traces produites
 
@@ -72,6 +84,7 @@ Les échanges reconstitués ont contribué à orienter :
 - la conception des classes
 - le protocole expérimental
 - la discussion des résultats
+- la correction du chemin de mesure mémoire et du crash Swing/headless
 - la rédaction de la synthèse
 
 Ils ne constituent pas à eux seuls une trace logicielle complète, mais une aide à la conception et à l'analyse.
