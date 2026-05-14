@@ -7,6 +7,11 @@ Projet de benchmark Java pour comparer deux implémentations du conteneur `ParcC
 
 Le projet mesure les performances sur plusieurs tailles de données et plusieurs scénarios mixtes, puis exporte les résultats en CSV/JSON pour analyse et visualisation.
 
+Depuis la mise à jour du `14 mai 2026`, le benchmark :
+
+- mesure la mémoire sur un chemin dédié, indépendant des scénarios, afin d'éviter les valeurs `0` instables
+- protège mieux le lancement Swing en environnement headless ou avec un `DISPLAY` invalide
+
 ## Auteurs
 
 - Janna Gudumac
@@ -64,6 +69,7 @@ Le notebook utilise :
 - `numpy`
 - `matplotlib`
 - `jupyter`
+- `jinja2`
 
 Un environnement virtuel local peut être utilisé si besoin.
 
@@ -92,7 +98,7 @@ Le programme :
   - `results/results.csv`
   - `results/results.json`
 
-Si un environnement graphique est disponible, l'interface Swing s'ouvre automatiquement. En mode headless, le benchmark fonctionne quand même et se contente d'exporter les fichiers.
+Si un environnement graphique réellement exploitable est disponible, l'interface Swing s'ouvre automatiquement. Sinon, le benchmark fonctionne quand même, exporte les fichiers et n'échoue plus sur un faux contexte graphique.
 
 ## Scénarios testés
 
@@ -117,10 +123,19 @@ Tailles mesurées :
 
 Le notebook se trouve dans `graphs/` et lit les résultats depuis `../results/`.
 
+Les graphes actuellement versionnés ont été régénérés après la correction du chemin de mesure mémoire. Le graphique `g5_memoire.png` repose donc maintenant sur des mesures cohérentes par couple `(structure, taille)`.
+
 ### Depuis le dossier `graphs/`
 
 ```bash
 jupyter notebook graphs.ipynb
+```
+
+Si vous utilisez un environnement virtuel local :
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install pandas numpy matplotlib jupyter jinja2
 ```
 
 Le notebook produit :
@@ -160,3 +175,4 @@ Pour un rendu académique, les fichiers les plus importants sont :
 - Les fichiers dans `bin/` sont des artefacts compilés.
 - Les fichiers PNG et exports CSV de synthèse sont régénérables.
 - Le benchmark utilise des graines fixes pour garder des mesures reproductibles.
+- La mesure mémoire est maintenant séparée des scénarios : elle est sondée plusieurs fois après `GC`, puis consolidée par médiane pour limiter le bruit de la JVM.
